@@ -32,4 +32,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::resource('users', UsersController::class);
     Route::get('/news', [NewsController::class, 'index']);
     Route::get('/news/{id}', [NewsController::class, 'show']);
+    Route::get('/categories-sources', [NewsController::class, 'getAllCategoriesAndSources']);
 });

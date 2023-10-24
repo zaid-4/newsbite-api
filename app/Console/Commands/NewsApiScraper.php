@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\DomCrawler\Crawler;
 
 class NewsApiScraper extends Command
 {
@@ -65,18 +66,22 @@ class NewsApiScraper extends Command
             $existingNews = News::where('slug', $article['description'])->first();
 
             if (!$existingNews && !is_null($article['title']) && !is_null($article['description']) && !is_null($article['content']) && !is_null($article['urlToImage'])) {
-                $filteredData[] = [
-                    'title' => $article['title'],
-                    'slug' => Str::limit($article['description'], 255),
-                    'category_id' => $category_id,
-                    'source_id' => $source->id,
-                    'source_url' => $article['url'],
-                    'author' => $article['author'],
-                    'description' => $article['content'],
-                    'published_at' => date('Y-m-d H:i:s', strtotime($article['publishedAt'])),
-                    'thumbnail_url' => $article['urlToImage'],
-                ];
-                $this->storeNewsArticle(end($filteredData));
+
+                $news_content = $this->getFullArticleContent($article['url']);
+                if($news_content){
+                    $filteredData[] = [
+                        'title' => $article['title'],
+                        'slug' => Str::limit($article['description'], 255),
+                        'category_id' => $category_id,
+                        'source_id' => $source->id,
+                        'source_url' => $article['url'],
+                        'author' => $article['author'],
+                        'description' => $news_content,
+                        'published_at' => date('Y-m-d H:i:s', strtotime($article['publishedAt'])),
+                        'thumbnail_url' => $article['urlToImage'],
+                    ];
+                    $this->storeNewsArticle(end($filteredData));
+                }
             } else {
                 $this->info("Skipping duplicate news article: {$article['title']}");
             }
@@ -100,5 +105,36 @@ class NewsApiScraper extends Command
     {
         $this->info("Total Data Count: " . count($scrapedData));
         Log::info(json_encode($scrapedData));
+    }
+
+    public function getFullArticleContent($url)
+    {
+        try {
+            $response = Http::get($url);
+
+            if ($response->successful()) {
+                $html = $response->body();
+
+                // Create a new Crawler instance and load the HTML content
+                $crawler = new Crawler($html);
+
+                // Use the Crawler to filter and extract the content of all <p> tags
+                $paragraphs = $crawler->filter('p')->each(function (Crawler $node, $i) {
+                    return $node->text();
+                });
+
+                // Combine the extracted paragraphs into a single string
+                $articleContent = implode("\n", $paragraphs);
+
+                // Clean up or further process the article content if needed
+
+                return $articleContent;
+            }
+        } catch (\Exception $e) {
+            // Log the error or handle it as needed
+            Log::error('Error fetching content for URL ' . $url . ': ' . $e->getMessage());
+        }
+
+        return ''; // Return an empty string if the request fails or there's an error
     }
 }

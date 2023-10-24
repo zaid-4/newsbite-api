@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\News;
+use App\Models\Source;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +26,12 @@ class NewsController extends Controller
 
         // Filtering by source
         if ($request->has('source_id')) {
-            $query->where('source_id', $request->input('source_id'));
+            $query->where('author', $request->input('source_id'));
+        }
+
+        if ($request->has('author_name')) {
+            $authorName = $request->input('author_name');
+            $query->where('author', 'like', "%$authorName%");
         }
 
         // Filtering by keyword
@@ -87,7 +94,18 @@ class NewsController extends Controller
         ];
 
         return response()->json(['news' => $newsDetail], 200);
+    }
 
-        return response()->json(['news' => $news], 200); // HTTP 200 OK
+    public function getAllCategoriesAndSources()
+    {
+        // Fetch categories and sources that have related news articles
+        $categories = Category::has('news')->get();
+        $sources = Source::has('news')->get();
+
+        // Return the filtered categories and sources as JSON
+        return response()->json([
+            'categories' => $categories,
+            'sources' => $sources,
+        ]);
     }
 }
