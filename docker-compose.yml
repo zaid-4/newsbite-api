@@ -1,0 +1,29 @@
+version: '3'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/var/www
+    ports:
+      - 8181:8181
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=newsbite
+      - DB_USERNAME=root
+      - DB_PASSWORD=12345678
+    depends_on:
+      - db
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=12345678
+      - MYSQL_DATABASE=newsbite
+    ports:
+      - 3306:3306
+volumes:
+  db_data: {}
