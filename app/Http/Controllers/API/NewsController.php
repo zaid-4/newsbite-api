@@ -32,7 +32,7 @@ class NewsController extends Controller
         }
 
         //Filtering by published date
-        if ($request->has('date')) {
+        if ($request->input('date')) {
             $date = $request->input('date');
             $query->whereDate('published_at', '=', $date);
         }
