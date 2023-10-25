@@ -59,6 +59,7 @@ class AuthController extends Controller
         }
 
         $user = $request->user();
+        $user['preferences'] = json_decode($user->preferences, true);
         $token = $user->createToken('AuthToken')->plainTextToken;
 
         return response()->json(['user' => $user, 'token' => $token], 200); // HTTP 200 OK

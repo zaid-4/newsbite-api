@@ -17,11 +17,11 @@ return new class extends Migration
             $table->unsignedBigInteger('source_id');
             $table->string('title');
             $table->text('slug');
-            $table->longText('description');
-            $table->text('source_url')->nullable();;
-            $table->text('thumbnail_url')->nullable();;
-            $table->timestamp('published_at')->nullable();;
-            $table->string('author')->nullable();;
+            $table->longText('description')->nullable();
+            $table->text('source_url')->nullable();
+            $table->text('thumbnail_url')->nullable();
+            $table->timestamp('published_at')->nullable();
+            $table->string('author')->nullable();
 
             $table->index('category_id');
             $table->index('source_id');

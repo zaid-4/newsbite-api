@@ -26,11 +26,16 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 
+Route::get('/all-news', [NewsController::class, 'index']);
+Route::get('/all-news/{id}', [NewsController::class, 'show']);
+Route::get('/all-news-meta', [NewsController::class, 'getNewsMeta']);
+
 // User CRUD Routes
 Route::middleware('auth:sanctum')->group(function () {
     // User CRUD Routes
-    Route::resource('users', UsersController::class);
+    Route::put('/update-profile', [UsersController::class, 'update']);
     Route::get('/news', [NewsController::class, 'index']);
     Route::get('/news/{id}', [NewsController::class, 'show']);
-    Route::get('/categories-sources', [NewsController::class, 'getAllCategoriesAndSources']);
+    Route::get('/news-meta', [NewsController::class, 'getNewsMeta']);
+    Route::put('/user-prefrences', [UsersController::class, 'updatePrefrences']);
 });

@@ -11,10 +11,21 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\DomCrawler\Crawler;
 
-class NewsApiScraper extends Command
+class GuardianApiScraper extends Command
 {
-    protected $signature = 'app:news-api-scraper';
-    protected $description = 'GET the News Data from news API, store it in the DB';
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'app:guardian-api-scraper';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'GET the News Data from Guardian API and store it in the DB';
 
     public function __construct()
     {
@@ -26,64 +37,61 @@ class NewsApiScraper extends Command
         $this->info('Scraping data from the News API...');
 
         // Make an API request to retrieve news data
-        $categories = Category::all();
 
-        $scrapedData = [];
-
-        foreach ($categories as $category) {
-            $response = $this->makeApiRequest($category);
-            if (!$response->successful()) {
-                $this->error("Failed to fetch data for the category: {$category->key}");
-                continue;
-            }
-
-            $data = $response->json();
-            $filteredData = $this->filterAndStoreData($data['articles'], $category->id);
-            $scrapedData = array_merge($scrapedData, $filteredData);
+        $response = $this->makeApiRequest();
+        if (!$response->successful()) {
+            $this->error("Failed to fetch data}");
+            // continue;
         }
 
-        $this->logScrapedData($scrapedData);
+        $data = $response->json();
+        $results = $data['response']['results'];
+        $filteredData = $this->filterAndStoreData($results);
+
+        $this->logScrapedData($filteredData);
         $this->info('Scraping completed.');
     }
 
-    private function makeApiRequest($category)
+    private function makeApiRequest()
     {
-        return Http::get('https://newsapi.org/v2/top-headlines', [
-            'country' => 'us',
-            'language' => 'en',
-            'apiKey' => '7b5ef23c4c7e4903b2abf85576fcdfa4',
-            'category' => $category->key,
-            'pageSize' => 100, // Adjust as needed
+        return Http::get('https://content.guardianapis.com/search', [
+            'page-size' => 100,
+            'api-key' => '08ff3e7a-253a-4636-9891-40b975acb2d3',
+            // Add other parameters as needed
         ]);
     }
 
-    private function filterAndStoreData($articles, $category_id)
+    private function filterAndStoreData($articles)
     {
         $filteredData = [];
 
         foreach ($articles as $article) {
-            $source = $this->getSource($article['source']['name']);
-            $existingNews = News::withoutGlobalScope('user_preferences')->where('slug', $article['description'])->first();
+            $source = $this->getSource('The Guardian');
+            $general_category_id = Category::where('key', 'general')->first()->id;
+            $category_key = $article['sectionId'];
+            $article_category = Category::where('key', 'like', "%$category_key%")->first();
+            $category_id = $article_category? $article_category->id : $general_category_id;
+            $existingNews = News::withoutGlobalScope('user_preferences')->where('source_url', $article['webUrl'])->first();
 
-            if (!$existingNews && !is_null($article['title']) && !is_null($article['description']) && !is_null($article['content']) && !is_null($article['urlToImage'])) {
+            if (!$existingNews && !is_null($article['webTitle']) && !is_null($article['webUrl'])) {
 
-                $news_content = $this->getFullArticleContent($article['url']);
+                $news_content = $this->getFullArticleContent($article['webUrl']);
                 if($news_content){
                     $filteredData[] = [
-                        'title' => $article['title'],
-                        'slug' => Str::limit($article['description'], 255),
+                        'title' => $article['webTitle'],
+                        'slug' => Str::limit($news_content, 255),
                         'category_id' => $category_id,
                         'source_id' => $source->id,
-                        'source_url' => $article['url'],
-                        'author' => $article['author'],
+                        'source_url' => $article['webUrl'],
+                        'author' => null,
                         'description' => $news_content,
-                        'published_at' => date('Y-m-d H:i:s', strtotime($article['publishedAt'])),
-                        'thumbnail_url' => $article['urlToImage'],
+                        'published_at' => date('Y-m-d H:i:s', strtotime($article['webPublicationDate'])),
+                        'thumbnail_url' => null,
                     ];
                     $this->storeNewsArticle(end($filteredData));
                 }
             } else {
-                $this->info("Skipping duplicate news article: {$article['title']}");
+                $this->info("Skipping duplicate news article: {$article['webTitle']}");
             }
         }
 

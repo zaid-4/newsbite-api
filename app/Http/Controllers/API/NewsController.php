@@ -8,10 +8,6 @@ use App\Models\News;
 use App\Models\Source;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\JsonResponse;
 
 class NewsController extends Controller
 {
@@ -63,7 +59,7 @@ class NewsController extends Controller
                 'source_url' => $item->source_url,
                 'thumbnail_url' => $item->thumbnail_url,
                 'title' => $item->title,
-                'published_at' => $item->published_at,
+                'published_at' => date('D M j, Y', strtotime($item->published_at)),
                 'category' => $item->category->name, // Use the actual field name of the category name
                 'source' => $item->source->name, // Use the actual field name of the source name
             ];
@@ -88,7 +84,7 @@ class NewsController extends Controller
             'author' => $news->author,
             'source_url' => $news->source_url,
             'thumbnail_url' => $news->thumbnail_url,
-            'published_at' => $news->published_at,
+            'published_at' => date('D M j, Y', strtotime($news->published_at)),
             'category' => $news->category->name, // Use the actual field name of the category name
             'source' => $news->source->name, // Use the actual field name of the source name
         ];
@@ -96,16 +92,26 @@ class NewsController extends Controller
         return response()->json(['news' => $newsDetail], 200);
     }
 
-    public function getAllCategoriesAndSources()
+    public function getNewsMeta(Request $request)
     {
-        // Fetch categories and sources that have related news articles
-        $categories = Category::has('news')->get();
-        $sources = Source::has('news')->get();
+        if ($request->has('type'))
+        {
+            $categories = Category::all();
+            $sources = Source::all();
+            $authors = News::withoutGlobalScope('user_preferences')->whereNotNull('author')->distinct()->pluck('author');
+
+        } else{
+            // Fetch categories and sources that have related news articles
+            $categories = Category::has('news')->get();
+            $sources = Source::has('news')->get();
+            $authors = News::whereNotNull('author')->distinct()->pluck('author');
+        }
 
         // Return the filtered categories and sources as JSON
         return response()->json([
             'categories' => $categories,
             'sources' => $sources,
+            'authors' => $authors
         ]);
     }
 }

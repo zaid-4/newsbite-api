@@ -12,36 +12,20 @@ use Illuminate\Http\JsonResponse;
 
 class UsersController extends Controller
 {
-    public function index()
-    {
-        $users = User::all();
-        return response()->json(['users' => $users], 200); // HTTP 200 OK
-    }
 
-    public function show($id)
+    public function update(Request $request)
     {
-        $user = User::find($id);
+        $user = User::find(auth()->user()->id);
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404); // HTTP 404 Not Found
-        }
-
-        return response()->json(['user' => $user], 200); // HTTP 200 OK
-    }
-
-    public function update(Request $request, $id)
-    {
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404); // HTTP 404 Not Found
+            return response()->json(['message' => 'Unauthorized'], 401); // HTTP 401 Unauthorized
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
-            'email' => 'email|unique:users,email,' . $id,
+            'email' => 'email|unique:users,email,' . auth()->user()->id,
             'old_password' => 'string|min:8', // Add validation for old password
-            'password' => 'string|min:8|confirmed', // Validation for new password and confirmation
+            'new_password' => 'string|min:8', // Validation for new password and confirmation
         ]);
 
         if ($validator->fails()) {
@@ -57,13 +41,36 @@ class UsersController extends Controller
         $user->name = $request->input('name');
         $user->email = $request->input('email');
 
-        if ($request->has('password')) {
-            $user->password = Hash::make($request->input('password'));
+        if ($request->has('new_password')) {
+            $user->password = Hash::make($request->input('new_password'));
         }
 
         $user->save();
 
         return response()->json(['user' => $user, 'message' => 'User updated successfully'], 200); // HTTP 200 OK
+    }
+
+    public function updatePrefrences(Request $request)
+    {
+        // Validate the request data
+        $this->validate($request, [
+            'favorite_sources' => 'array|max:4',
+            // });
+            'favorite_categories' => 'array|max:3',
+            'favorite_authors' => 'array|max:4',
+        ]);
+
+        // Get the authenticated user
+        $user = User::find(auth()->user()->id);
+        // Update the user's preferences
+        $user->preferences = [
+            'favorite_sources' => $request->input('favorite_sources'),
+            'favorite_categories' => $request->input('favorite_categories'),
+            'favorite_authors' => $request->input('favorite_authors'),
+        ];
+        $user->save();
+
+        return response()->json(['message' => 'Preferences updated successfully', 'user' => $user]);
     }
 
     public function destroy($id)
