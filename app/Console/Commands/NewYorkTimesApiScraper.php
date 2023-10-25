@@ -54,9 +54,9 @@ class NewYorkTimesApiScraper extends Command
 
     private function makeApiRequest()
     {
-        return Http::get('https://api.nytimes.com/svc/news/v3/content/all/all.json', [
+        return Http::get(env('NEWYORK_TIMES_API_URL'), [
             'limit' => 50,
-            'api-key' => 'YQmUYyRINBuPfNKxQoO6UGuChWwdqtQf',
+            'api-key' => env('NEWYORK_TIMES_API_KEY'),
             // Add other parameters as needed
         ]);
     }
@@ -95,7 +95,7 @@ class NewYorkTimesApiScraper extends Command
                     'published_at' => date('Y-m-d H:i:s', strtotime($article['published_date'])),
                     'thumbnail_url' => $thumbnail_url,
                 ];
-                $this->storeNewsArticle(end($filteredData));
+                // $this->storeNewsArticle(end($filteredData));
             } else {
                 $this->info("Skipping duplicate news article: {$article['title']}");
             }

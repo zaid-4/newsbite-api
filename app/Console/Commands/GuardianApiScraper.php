@@ -41,7 +41,6 @@ class GuardianApiScraper extends Command
         $response = $this->makeApiRequest();
         if (!$response->successful()) {
             $this->error("Failed to fetch data}");
-            // continue;
         }
 
         $data = $response->json();
@@ -54,10 +53,9 @@ class GuardianApiScraper extends Command
 
     private function makeApiRequest()
     {
-        return Http::get('https://content.guardianapis.com/search', [
+        return Http::get(env('GUARDIAN_API_URL'), [
             'page-size' => 100,
-            'api-key' => '08ff3e7a-253a-4636-9891-40b975acb2d3',
-            // Add other parameters as needed
+            'api-key' => env('GUARDIAN_API_KEY'),
         ]);
     }
 
@@ -123,23 +121,18 @@ class GuardianApiScraper extends Command
             if ($response->successful()) {
                 $html = $response->body();
 
-                // Create a new Crawler instance and load the HTML content
                 $crawler = new Crawler($html);
 
-                // Use the Crawler to filter and extract the content of all <p> tags
                 $paragraphs = $crawler->filter('p')->each(function (Crawler $node, $i) {
                     return $node->text();
                 });
 
-                // Combine the extracted paragraphs into a single string
                 $articleContent = implode("\n", $paragraphs);
 
-                // Clean up or further process the article content if needed
 
                 return $articleContent;
             }
         } catch (\Exception $e) {
-            // Log the error or handle it as needed
             Log::error('Error fetching content for URL ' . $url . ': ' . $e->getMessage());
         }
 

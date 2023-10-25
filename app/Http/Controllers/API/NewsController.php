@@ -67,8 +67,8 @@ class NewsController extends Controller
                 'thumbnail_url' => $item->thumbnail_url,
                 'title' => $item->title,
                 'published_at' => date('D M j, Y', strtotime($item->published_at)),
-                'category' => $item->category->name, // Use the actual field name of the category name
-                'source' => $item->source->name, // Use the actual field name of the source name
+                'category' => $item->category->name,
+                'source' => $item->source->name,
             ];
         });
 
@@ -92,8 +92,8 @@ class NewsController extends Controller
             'source_url' => $news->source_url,
             'thumbnail_url' => $news->thumbnail_url,
             'published_at' => date('D M j, Y', strtotime($news->published_at)),
-            'category' => $news->category->name, // Use the actual field name of the category name
-            'source' => $news->source->name, // Use the actual field name of the source name
+            'category' => $news->category->name,
+            'source' => $news->source->name,
         ];
 
         return response()->json(['news' => $newsDetail], 200);
@@ -114,7 +114,6 @@ class NewsController extends Controller
             $authors = News::whereNotNull('author')->distinct()->pluck('author');
         }
 
-        // Return the filtered categories and sources as JSON
         return response()->json([
             'categories' => $categories,
             'sources' => $sources,

@@ -48,12 +48,12 @@ class NewsApiScraper extends Command
 
     private function makeApiRequest($category)
     {
-        return Http::get('https://newsapi.org/v2/top-headlines', [
+        return Http::get(env('NEWS_API_URL'), [
             'country' => 'us',
             'language' => 'en',
-            'apiKey' => '7b5ef23c4c7e4903b2abf85576fcdfa4',
+            'apiKey' => env('NEWS_API_KEY'),
             'category' => $category->key,
-            'pageSize' => 100, // Adjust as needed
+            'pageSize' => 100,
         ]);
     }
 
@@ -115,23 +115,18 @@ class NewsApiScraper extends Command
             if ($response->successful()) {
                 $html = $response->body();
 
-                // Create a new Crawler instance and load the HTML content
                 $crawler = new Crawler($html);
 
-                // Use the Crawler to filter and extract the content of all <p> tags
                 $paragraphs = $crawler->filter('p')->each(function (Crawler $node, $i) {
                     return $node->text();
                 });
 
-                // Combine the extracted paragraphs into a single string
                 $articleContent = implode("\n", $paragraphs);
 
-                // Clean up or further process the article content if needed
 
                 return $articleContent;
             }
         } catch (\Exception $e) {
-            // Log the error or handle it as needed
             Log::error('Error fetching content for URL ' . $url . ': ' . $e->getMessage());
         }
 

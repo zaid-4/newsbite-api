@@ -13,9 +13,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('app:guardian-api-scraper')->everyTwoHours();
-        $schedule->command('app:news-api-scraper')->everyFourHours();
-        $schedule->command('app:new-york-times-api-scraper')->everyTwoHours();
+        $schedule->command('app:guardian-api-scraper');
+        $schedule->command('app:news-api-scraper');
+        $schedule->command('app:new-york-times-api-scraper');
     }
 
     /**
