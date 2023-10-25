@@ -54,10 +54,9 @@ class UsersController extends Controller
     {
         // Validate the request data
         $this->validate($request, [
-            'favorite_sources' => 'array|max:4',
-            // });
-            'favorite_categories' => 'array|max:3',
-            'favorite_authors' => 'array|max:4',
+            'favorite_sources' => 'array',
+            'favorite_categories' => 'array',
+            'favorite_authors' => 'array',
         ]);
 
         // Get the authenticated user
@@ -71,18 +70,5 @@ class UsersController extends Controller
         $user->save();
 
         return response()->json(['message' => 'Preferences updated successfully', 'user' => $user]);
-    }
-
-    public function destroy($id)
-    {
-        $user = User::find($id);
-
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404); // HTTP 404 Not Found
-        }
-
-        $user->delete();
-
-        return response()->json(['message' => 'User deleted successfully'], 200); // HTTP 200 OK
     }
 }

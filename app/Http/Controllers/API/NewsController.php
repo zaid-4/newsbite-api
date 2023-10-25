@@ -25,9 +25,16 @@ class NewsController extends Controller
             $query->where('author', $request->input('source_id'));
         }
 
+        // Filtering by author
         if ($request->has('author_name')) {
             $authorName = $request->input('author_name');
             $query->where('author', 'like', "%$authorName%");
+        }
+
+        //Filtering by published date
+        if ($request->has('date')) {
+            $date = $request->input('date');
+            $query->whereDate('published_at', '=', $date);
         }
 
         // Filtering by keyword
