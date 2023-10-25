@@ -81,7 +81,6 @@ class NewYorkTimesApiScraper extends Command
                 if (preg_match('/By\s+(.+)/', $article['byline'], $matches)) {
                     $authorName = $matches[1];
                 } else {
-                    // Handle the case where "By" is not found
                     $authorName = $article['byline'];
                 }
                 $filteredData[] = [
@@ -95,7 +94,7 @@ class NewYorkTimesApiScraper extends Command
                     'published_at' => date('Y-m-d H:i:s', strtotime($article['published_date'])),
                     'thumbnail_url' => $thumbnail_url,
                 ];
-                // $this->storeNewsArticle(end($filteredData));
+                $this->storeNewsArticle(end($filteredData));
             } else {
                 $this->info("Skipping duplicate news article: {$article['title']}");
             }
